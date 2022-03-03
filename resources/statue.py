@@ -78,10 +78,11 @@ class Statue:
     def __init__(self, dummyConnection=False, ):
         self.port = "COM6"
         self.baudrate = 115200
+        self.dummyConnection = dummyConnection
 
         self.serial = None
-        if not dummyConnection:
-            self.create_connection()
+        self.create_connection()
+
         self.state = numpy.zeros((self.rings, self.crystals, 3))
         self.convertMap = numpy.zeros((self.rings, self.crystals), dtype="int")
         self.exportedState = numpy.zeros((self.muxSize * 2, self.muxSize, 3), dtype=">i1")
@@ -112,7 +113,7 @@ class Statue:
         return self.serial.isOpen()
 
     def create_connection(self):
-        if not self.is_connected():
+        if not self.is_connected() and not self.dummyConnection:
             try:
                 self.serial = serial.Serial(port=self.port, baudrate=self.baudrate, timeout=0.1)
             except serial.serialutil.SerialException:
@@ -194,4 +195,6 @@ class Statue:
                     break
 
     def upload_code(self, cppFile):
-        pass
+        self.close_connection()
+        # UPLOAD CODE
+        self.create_connection()
