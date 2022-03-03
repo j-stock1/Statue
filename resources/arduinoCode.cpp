@@ -103,10 +103,10 @@ void loop(){
         ran = false;
     }
     if(upd){
-        Serial.write(inBuffer, buffer_len);
         displayBuffer('a', 0, true);
         displayBuffer('b', buffer_len / 2, true);
         upd = false;
+        Serial.write("a");
     }
 }
 
