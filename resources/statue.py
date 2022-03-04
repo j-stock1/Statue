@@ -75,9 +75,9 @@ class Statue:
     rings = 17
     crystals = 22
 
-    def __init__(self, dummyConnection=False, ):
-        self.port = "COM6"
-        self.baudrate = 115200
+    def __init__(self, dummyConnection=False, port="COM6", baudrate=115200):
+        self.port = port
+        self.baudrate = baudrate
         self.dummyConnection = dummyConnection
 
         self.serial = None
