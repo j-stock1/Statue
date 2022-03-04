@@ -1,4 +1,5 @@
 import numpy
+import json
 
 
 class Keyframe:
@@ -27,14 +28,26 @@ class Keyframe:
     def get_position(self):
         return self.state
 
+    def to_dict(self):
+        data = {"position": self.position, "state": self.state.tolist()}
+        return data
+
+    @classmethod
+    def from_dict(cls, dictData, pattern):
+        keyframe = cls(dictData['position'], pattern)
+        array = numpy.array(dictData['state'])
+        keyframe.set_state(array)
+        return keyframe
+
 
 class Pattern:
-    def __init__(self, shape):
+    def __init__(self, shape, name):
         self.animated = False
         self.keyframes = []
         self.keyframesUnordered = {}
 
         self.shape = shape
+        self.name = name
 
     def get_min_and_max(self):
         if len(self.keyframes) < 1:
@@ -57,11 +70,29 @@ class Pattern:
         if not self.animated:
             return self.keyframes[0].get_state()
 
+        keyframe1 = None
+        keyframe2 = None
 
+        for index, keyframe in self.keyframes:
+            if keyframe.get_position() == position:
+                return keyframe.get_state()
+            keyframe1
+            keyframe1 = keyframe2
+            keyframe2 = keyframe
+            if position < keyframe.get_position():
+                break
+            if index == len(self.keyframes) - 1 and position > keyframe.get_position():
+                keyframe1 = keyframe2
+                keyframe2 = keyframe
 
+        if keyframe1 is None:
+            return keyframe2.get_state()
+        if keyframe2 is None:
+            return keyframe1.get_state()
 
+        percent = (keyframe2.get_position() - keyframe1.get_position()) / (position - keyframe1.get_position())
 
-
+        return keyframe1 * percent + keyframe2 * (1 - percent)
 
     def add_keyframe(self, position, state=None):
         keyframe = Keyframe(position, self)
@@ -106,5 +137,43 @@ class Pattern:
             if i not in self.keyframesUnordered:
                 return i
 
+    def get_name(self):
+        return self.name
+
+    def set_name(self, name):
+        self.name = name
+
     def get_shape(self):
         return self.shape
+
+    def to_json(self):
+        data = {"animated": self.animated, "shape": self.shape, "keyframes": [], "name": self.name}
+
+        for keyframe in self.keyframes:
+            data["keyframes"].append(keyframe.to_dict())
+
+        return json.dumps(data)
+
+    @classmethod
+    def from_json(cls, jsonData):
+        data = json.loads(jsonData)
+
+        pattern = cls(data["shape"], data["name"])
+
+        for keyframe in data["keyframes"]:
+            pattern.keyframes.append(Keyframe.from_dict(keyframe, pattern))
+
+        pattern.set_animated(data["animated"])
+
+    def save_to_file(self, file):
+        f = open(file)
+        f.write(self.to_json())
+        f.close()
+
+    @classmethod
+    def read_from_file(cls, file):
+        f = open(file)
+        data = f.read()
+        f.close()
+
+        return cls.from_json(data)
