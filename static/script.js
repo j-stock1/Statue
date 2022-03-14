@@ -103,11 +103,9 @@ var lesson10 = {
 	this.plane.visible = false;
 	this.scene.add(this.plane);
 
-	// Add 100 random objects (spheres)
-	var object, material, radius;
-	//var objGeometry = new THREE.SphereGeometry(1, 24, 24);
-	var objGeometry = new THREE.CylinderGeometry(1, 3, 6, 50,1);
-	material = new THREE.MeshPhongMaterial({color: Math.random() * 0xffffff});
+	var object, material;
+	var objGeometry = new THREE.CylinderGeometry(10, 10, 30, 22,1);
+	material = new THREE.MeshPhongMaterial({color: 0xFFA500});
 	material.transparent = true;
 	object = new THREE.Mesh(objGeometry.clone(), material);
 
