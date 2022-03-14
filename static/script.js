@@ -68,7 +68,7 @@ var lesson10 = {
 	this.scene.add(this.plane);
 
 	var object, material;
-	var objGeometry = new THREE.CylinderGeometry(1, 1, 3, 22,1);
+	var objGeometry = new THREE.CylinderGeometry(1, 1, 3, 22, 1);
 	material = new THREE.MeshPhongMaterial({color: 0xFFA500});
 	material.transparent = true;
 	var r = 7;
@@ -78,6 +78,8 @@ var lesson10 = {
 	for (var col = 0; col <= columns; ++col) {
 		for (var i = 0; i < 360; i += (360 / (rows - 1))) {
 			count++;
+			//material = new THREE.MeshPhongMaterial({color: Math.random() *  0xffffff});
+			//material.transparent = true;
 			var x = Math.sin(i*(Math.PI/180))*r;
 			var y = Math.cos(i*(Math.PI/180))*r;
 			object = new THREE.Mesh(objGeometry.clone(), material);
@@ -88,8 +90,6 @@ var lesson10 = {
 		}
 	}
 	console.log(`Count is ${count}`);
-
-
   }
 };
 
