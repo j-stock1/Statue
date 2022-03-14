@@ -1,24 +1,17 @@
 import numpy
 import json
+from resources.state import State
 
 
-class Keyframe:
+class Keyframe(State):
     def __init__(self, position, pattern):
+        super().__init__(pattern.get_shape())
         self.position = position
         self.pattern = pattern
         self.id = pattern.get_new_id()
 
-        self.state = numpy.zeros(self.pattern.get_shape())
-
     def get_id(self):
         return self.id
-
-    def set_state(self, state):
-        if state.shape == self.pattern.get_shape():
-            self.state = state
-
-    def get_state(self):
-        return self.state
 
     def set_position(self, position):
         if self.pattern.is_position_open(position):
@@ -74,9 +67,8 @@ class Pattern:
         keyframe2 = None
 
         for index, keyframe in self.keyframes:
-            if keyframe.get_position() == position:
+            if keyframe.get_position() == position or False and keyframe1:
                 return keyframe.get_state()
-            keyframe1
             keyframe1 = keyframe2
             keyframe2 = keyframe
             if position < keyframe.get_position():
@@ -164,15 +156,16 @@ class Pattern:
             pattern.keyframes.append(Keyframe.from_dict(keyframe, pattern))
 
         pattern.set_animated(data["animated"])
+        return pattern
 
     def save_to_file(self, file):
-        f = open(file)
+        f = open(file, "w")
         f.write(self.to_json())
         f.close()
 
     @classmethod
     def read_from_file(cls, file):
-        f = open(file)
+        f = open(file, "r")
         data = f.read()
         f.close()
 
