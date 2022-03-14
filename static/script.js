@@ -10,27 +10,6 @@
  * http://www.script-tutorials.com/
  */
 
-sbVertexShader = [
-"varying vec3 vWorldPosition;",
-"void main() {",
-"  vec4 worldPosition = modelMatrix * vec4( position, 1.0 );",
-"  vWorldPosition = worldPosition.xyz;",
-"  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
-"}",
-].join("\n");
-
-sbFragmentShader = [
-"uniform vec3 topColor;",
-"uniform vec3 bottomColor;",
-"uniform float offset;",
-"uniform float exponent;",
-"varying vec3 vWorldPosition;",
-"void main() {",
-"  float h = normalize( vWorldPosition + offset ).y;",
-"  gl_FragColor = vec4( mix( bottomColor, topColor, max( pow( h, exponent ), 0.0 ) ), 1.0 );",
-"}",
-].join("\n");
-
 var lesson10 = {
   scene: null, camera: null, renderer: null,
   container: null, controls: null,
@@ -65,9 +44,6 @@ var lesson10 = {
 
 	// Events
 	THREEx.WindowResize(this.renderer, this.camera);
-	document.addEventListener('mousedown', this.onDocumentMouseDown, false);
-	document.addEventListener('mousemove', this.onDocumentMouseMove, false);
-	document.addEventListener('mouseup', this.onDocumentMouseUp, false);
 
 	// Prepare Orbit controls
 	this.controls = new THREE.OrbitControls(this.camera);
@@ -85,8 +61,6 @@ var lesson10 = {
 	this.camera.add(dirLight);
 	this.camera.add(dirLight.target);
 
-	// Display skybox
-	this.addSkybox();
 
 	// Plane, that helps to determinate an intersection position
 	this.plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(500, 500, 8, 8), new THREE.MeshBasicMaterial({color: 0xffffff}));
@@ -101,7 +75,6 @@ var lesson10 = {
 	var count = 0;
 	var rows = 22;
 	var columns = 17;
-	var startY = (columns / 2) * -4;
 	for (var col = 0; col <= columns; ++col) {
 		for (var i = 0; i < 360; i += (360 / (rows - 1))) {
 			count++;
@@ -109,7 +82,7 @@ var lesson10 = {
 			var y = Math.cos(i*(Math.PI/180))*r;
 			object = new THREE.Mesh(objGeometry.clone(), material);
 			object.position.x = y;
-			object.position.y = startY + (col * 4);
+			object.position.y = (columns / 2 * -4) + (col * 4);
 			object.position.z = x;
 			this.scene.add(object);
 		}
@@ -117,78 +90,6 @@ var lesson10 = {
 	console.log(`Count is ${count}`);
 
 
-  },
-  addSkybox: function() {
-	var iSBrsize = 500;
-	var uniforms = {
-	  topColor: {type: "c", value: new THREE.Color(0x0077ff)}, bottomColor: {type: "c", value: new THREE.Color(0xffffff)},
-	  offset: {type: "f", value: iSBrsize}, exponent: {type: "f", value: 1.5}
-	}
-
-	var skyGeo = new THREE.SphereGeometry(iSBrsize, 32, 32);
-	skyMat = new THREE.ShaderMaterial({vertexShader: sbVertexShader, fragmentShader: sbFragmentShader, uniforms: uniforms, side: THREE.DoubleSide, fog: false});
-	skyMesh = new THREE.Mesh(skyGeo, skyMat);
-	this.scene.add(skyMesh);
-  },
-  onDocumentMouseDown: function (event) {
-	// Get mouse position
-	var mouseX = (event.clientX / window.innerWidth) * 2 - 1;
-	var mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
-
-	// Get 3D vector from 3D mouse position using 'unproject' function
-	var vector = new THREE.Vector3(mouseX, mouseY, 1);
-	vector.unproject(lesson10.camera);
-
-	// Set the raycaster position
-	lesson10.raycaster.set( lesson10.camera.position, vector.sub( lesson10.camera.position ).normalize() );
-
-	// Find all intersected objects
-	var intersects = lesson10.raycaster.intersectObjects(lesson10.objects);
-
-	if (intersects.length > 0) {
-	  // Disable the controls
-	  lesson10.controls.enabled = false;
-
-	  // Set the selection - first intersected object
-	  lesson10.selection = intersects[0].object;
-
-	  // Calculate the offset
-	  var intersects = lesson10.raycaster.intersectObject(lesson10.plane);
-	  lesson10.offset.copy(intersects[0].point).sub(lesson10.plane.position);
-	}
-  },
-  onDocumentMouseMove: function (event) {
-	event.preventDefault();
-
-	// Get mouse position
-	var mouseX = (event.clientX / window.innerWidth) * 2 - 1;
-	var mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
-
-	// Get 3D vector from 3D mouse position using 'unproject' function
-	var vector = new THREE.Vector3(mouseX, mouseY, 1);
-	vector.unproject(lesson10.camera);
-
-	// Set the raycaster position
-	lesson10.raycaster.set( lesson10.camera.position, vector.sub( lesson10.camera.position ).normalize() );
-
-	if (lesson10.selection) {
-	  // Check the position where the plane is intersected
-	  var intersects = lesson10.raycaster.intersectObject(lesson10.plane);
-	  // Reposition the object based on the intersection point with the plane
-	  lesson10.selection.position.copy(intersects[0].point.sub(lesson10.offset));
-	} else {
-	  // Update position of the plane if need
-	  var intersects = lesson10.raycaster.intersectObjects(lesson10.objects);
-	  if (intersects.length > 0) {
-		lesson10.plane.position.copy(intersects[0].object.position);
-		lesson10.plane.lookAt(lesson10.camera.position);
-	  }
-	}
-  },
-  onDocumentMouseUp: function (event) {
-	// Enable the controls
-	lesson10.controls.enabled = true;
-	lesson10.selection = null;
   }
 };
 
@@ -202,9 +103,7 @@ function animate() {
 // Update controls and stats
 function update() {
   var delta = lesson10.clock.getDelta();
-
   lesson10.controls.update(delta);
-  //lesson10.stats.update();
 }
 
 // Render the scene
