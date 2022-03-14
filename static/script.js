@@ -44,7 +44,7 @@ var lesson10 = {
 	this.scene = new THREE.Scene();
 	this.scene.fog = new THREE.FogExp2(0xcce0ff, 0.0003);
 
-	var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;
+	var SCREEN_WIDTH = window.innerWidth - 20, SCREEN_HEIGHT = window.innerHeight - 20;
 
 	// Prepare perspective camera
 	var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 1, FAR = 1000;
@@ -77,16 +77,6 @@ var lesson10 = {
 	// Prepare clock
 	this.clock = new THREE.Clock();
 
-	// Prepare stats
-	/*
-	this.stats = new Stats();
-	this.stats.domElement.style.position = 'absolute';
-	this.stats.domElement.style.left = '50px';
-	this.stats.domElement.style.bottom = '50px';
-	this.stats.domElement.style.zIndex = 1;
-	this.container.appendChild( this.stats.domElement );
-	*/
-
 	// Add lights
 	this.scene.add( new THREE.AmbientLight(0x444444));
 
@@ -104,16 +94,28 @@ var lesson10 = {
 	this.scene.add(this.plane);
 
 	var object, material;
-	var objGeometry = new THREE.CylinderGeometry(10, 10, 30, 22,1);
+	var objGeometry = new THREE.CylinderGeometry(1, 1, 3, 22,1);
 	material = new THREE.MeshPhongMaterial({color: 0xFFA500});
 	material.transparent = true;
-	object = new THREE.Mesh(objGeometry.clone(), material);
+	var r = 7;
+	var count = 0;
+	var rows = 22;
+	var columns = 17;
+	var startY = (columns / 2) * -4;
+	for (var col = 0; col <= columns; ++col) {
+		for (var i = 0; i < 360; i += (360 / (rows - 1))) {
+			count++;
+			var x = Math.sin(i*(Math.PI/180))*r;
+			var y = Math.cos(i*(Math.PI/180))*r;
+			object = new THREE.Mesh(objGeometry.clone(), material);
+			object.position.x = y;
+			object.position.y = startY + (col * 4);
+			object.position.z = x;
+			this.scene.add(object);
+		}
+	}
+	console.log(`Count is ${count}`);
 
-	object.position.x = 0;
-	object.position.y = 0;
-	object.position.z = 0;
-
-	this.scene.add(object);
 
   },
   addSkybox: function() {
