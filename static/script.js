@@ -2,11 +2,13 @@ var lesson10 = {
 	init: function() {
 		this.scene = new THREE.Scene();
 		this.scene.fog = new THREE.FogExp2(0xcce0ff, 0.0003);
-		this.camera = new THREE.PerspectiveCamera();
+		var SCREEN_WIDTH = window.innerWidth - 20, SCREEN_HEIGHT = window.innerHeight - 20;
+		var ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT;
+		this.camera = new THREE.PerspectiveCamera(45, ASPECT, 1, 1000);
 		this.scene.add(this.camera);
 		this.camera.position.set(100, 0, 0);
 		this.renderer = new THREE.WebGLRenderer({ antialias:true });
-		this.renderer.setSize(window.innerWidth - 20, window.innerHeight - 20);
+		this.renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 		this.renderer.setClearColor(this.scene.fog.color);
 		this.container = document.createElement('div');
 		document.body.appendChild(this.container);
