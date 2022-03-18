@@ -50,6 +50,17 @@ class App:
             pattern = Pattern(self.statue.get_shape(), name)
             self.patterns[name] = pattern
 
+    def remove_pattern(self, name: str):
+        if name in self.patterns:
+            if self.currentPattern == name:
+                self.currentPattern = None
+            del self.patterns[name]
+
+            os.remove(os.path.join(self.patternDir, name))
+
+    def get_pattern_names(self) -> list[str, ...]:
+        return list(self.patterns.keys())
+
     def get_pattern(self, name: str) -> Optional[Pattern]:
         return self.patterns.get(name)
 

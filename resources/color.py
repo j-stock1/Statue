@@ -20,31 +20,31 @@ class Color:
         elif self.b > 255:
             self.b = 255
 
-    def get_r(self):
+    def get_r(self) -> int:
         return self.r
 
-    def get_g(self):
+    def get_g(self) -> int:
         return self.g
 
-    def get_b(self):
+    def get_b(self) -> int:
         return self.b
 
-    def get_tuple(self):
+    def get_tuple(self) -> (int, int, int):
         return self.r, self.g, self.b
 
-    def set_r(self, r):
+    def set_r(self, r: int):
         self.r = r
         self.ensure_values()
 
-    def set_g(self, g):
+    def set_g(self, g: int):
         self.g = g
         self.ensure_values()
 
-    def set_b(self, b):
+    def set_b(self, b: int):
         self.b = b
         self.ensure_values()
 
-    def set_tuple(self, tuple_):
+    def set_tuple(self, tuple_: (int, int, int)):
         self.r = tuple_[0]
         self.g = tuple_[0]
         self.b = tuple_[0]
