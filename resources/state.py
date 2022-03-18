@@ -1,4 +1,6 @@
 import numpy
+from typing import Tuple
+
 from resources.color import Color
 
 
@@ -16,11 +18,11 @@ def allow_rgb(funct):
 
 
 class State:
-    def __init__(self, shape: tuple[int, ...]):
+    def __init__(self, shape: Tuple[int, ...]):
         self.shape = shape
         self.state = numpy.zeros(shape)
 
-    def get_shape(self) -> tuple[int]:
+    def get_shape(self) -> Tuple[int]:
         return self.state.shape
 
     def set_state(self, state: numpy.ndarray):

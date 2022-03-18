@@ -4,7 +4,7 @@ from flask import Flask, render_template
 from gevent.pywsgi import WSGIServer
 from resources.statue import Statue
 from resources.pattern import Pattern
-from typing import Optional
+from typing import Optional, List
 import os
 
 
@@ -58,7 +58,7 @@ class App:
 
             os.remove(os.path.join(self.patternDir, name))
 
-    def get_pattern_names(self) -> list[str, ...]:
+    def get_pattern_names(self) -> List[str, ...]:
         return list(self.patterns.keys())
 
     def get_pattern(self, name: str) -> Optional[Pattern]:
