@@ -2,6 +2,7 @@ from __future__ import annotations
 import numpy
 import json
 from resources.state import State
+from typing import Tuple, List
 
 
 class Keyframe(State):
@@ -35,7 +36,7 @@ class Keyframe(State):
 
 
 class Pattern:
-    def __init__(self, shape: tuple[int, ...], name: str) -> (int, int):
+    def __init__(self, shape: Tuple[int], name: str) -> (int, int):
         self.animated = False
         self.keyframes = []
         self.keyframesUnordered = {}
@@ -99,7 +100,7 @@ class Pattern:
         del self.keyframesUnordered[keyframe.get_id()]
         self.set_animated(self.animated)
 
-    def get_keyframes(self) -> list[Keyframe, ...]:
+    def get_keyframes(self) -> List[Keyframe]:
         return self.keyframes
 
     def is_animated(self) -> bool:
@@ -136,7 +137,7 @@ class Pattern:
     def set_name(self, name: str):
         self.name = name
 
-    def get_shape(self) -> tuple[int, ...]:
+    def get_shape(self) -> Tuple[int]:
         return self.shape
 
     def to_json(self) -> str:

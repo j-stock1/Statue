@@ -58,7 +58,7 @@ class App:
 
             os.remove(os.path.join(self.patternDir, name))
 
-    def get_pattern_names(self) -> List[str, ...]:
+    def get_pattern_names(self) -> List[str]:
         return list(self.patterns.keys())
 
     def get_pattern(self, name: str) -> Optional[Pattern]:
