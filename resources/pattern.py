@@ -2,7 +2,7 @@ from __future__ import annotations
 import numpy
 import json
 from resources.state import State
-from typing import Tuple, List
+from typing import Tuple, List, Optional
 
 
 class Keyframe(State):
@@ -102,6 +102,9 @@ class Pattern:
 
     def get_keyframes(self) -> List[Keyframe]:
         return self.keyframes
+
+    def get_keyframe(self, id_: int) -> Optional[Keyframe]:
+        return self.keyframesUnordered.get(id_)
 
     def is_animated(self) -> bool:
         return self.animated

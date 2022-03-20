@@ -20,7 +20,7 @@ def allow_rgb(funct):
 class State:
     def __init__(self, shape: Tuple[int, ...]):
         self.shape = shape
-        self.state = numpy.zeros(shape)
+        self.state = numpy.zeros(shape, dtype=">i1")
 
     def get_shape(self) -> Tuple[int]:
         return self.state.shape
