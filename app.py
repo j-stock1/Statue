@@ -1,3 +1,6 @@
+import json
+
+import numpy
 from gevent import monkey
 monkey.patch_all()
 from flask import Flask, render_template, jsonify, request
@@ -54,6 +57,10 @@ class App:
                     return jsonify(self.successReturn)
             return jsonify(self.errorReturn)
 
+        @self.app.route("/api/edit_pattern")
+        def edit_pattern():
+            return jsonify(self.successReturn)
+
         @self.app.route("/api/pattern_info")
         def pattern_info():
             name = request.args.get("name")
@@ -65,7 +72,79 @@ class App:
                                 "animated": pattern.is_animated(),
                                 "keyframes": [i.get_id() for i in pattern.get_keyframes()],
                                 "minTime": min_,
-                                "maxTime": max_})
+                                "maxTime": max_,
+                                **self.successReturn})
+            return jsonify({**self.errorReturn, **self.errorReturn})
+
+        @self.app.route("/api/create_keyframe")
+        def create_keyframe():
+            name = request.args.get("name")
+            position = request.args.get("position", 0)
+            try:
+                position = float(position)
+            except ValueError:
+                pass
+            except TypeError:
+                pass
+            pattern = self.get_pattern(name)
+            if pattern:
+                keyframe = pattern.add_keyframe(position)
+                return jsonify({"id": keyframe.get_id(),
+                                "position": keyframe.get_position(),
+                                "state": keyframe.get_state().tolist(),
+                                **self.successReturn})
+            return jsonify(self.errorReturn)
+
+        @self.app.route("/api/remove_keyframe")
+        def remove_keyframe():
+            name = request.args.get("name")
+            id_ = request.args.get("id")
+            pattern = self.get_pattern(name)
+            try:
+                id_ = int(id_)
+            except ValueError:
+                pass
+            if pattern and pattern.has_keyframe(id_):
+                pattern.remove_keyframe(id_)
+                return jsonify(self.successReturn)
+            return jsonify(self.errorReturn)
+
+        @self.app.route("/api/edit_keyframe")
+        def edit_keyframe():
+            name = request.args.get("name")
+            id_ = request.args.get("id")
+            position = request.args.get("position")
+            state = request.args.get("state")
+            try:
+                id_ = int(id_)
+            except ValueError:
+                pass
+            except TypeError:
+                pass
+            try:
+                position = float(position)
+            except ValueError:
+                pass
+            except TypeError:
+                pass
+            try:
+                state = urllib.parse.unquote(state)
+                state = json.loads(state)
+                state = numpy.array(state, dtype=">i1")
+            except Exception:
+                state = None
+            pattern = self.get_pattern(name)
+            if pattern and pattern.has_keyframe(id_):
+                keyframe = pattern.get_keyframe(id_)
+                if position:
+                    keyframe.set_position(position)
+                if state:
+                    keyframe.set_state(state)
+                return jsonify({"id": keyframe.get_id(),
+                                "position": keyframe.get_position(),
+                                "state": keyframe.get_state().tolist(),
+                                **self.successReturn})
+
             return jsonify(self.errorReturn)
 
         @self.app.route("/api/keyframe_info")
@@ -76,21 +155,42 @@ class App:
                 id_ = int(id_)
             except ValueError:
                 pass
+            except TypeError:
+                pass
             pattern = self.get_pattern(name)
             if pattern:
                 keyframe = pattern.get_keyframe(id_)
                 if keyframe:
                     return jsonify({"id": id_,
                                     "position": keyframe.get_position(),
-                                    "state": self.statue.get_state().tolist()})
+                                    "state": keyframe.get_state().tolist(),
+                                    **self.successReturn})
             return jsonify(self.errorReturn)
+
+        @self.app.route("/api/edit_statue")
+        def edit_statue():
+            currentPattern = request.args.get("current")
+            currentTime = request.args.get("time")
+
+            if currentPattern in self.patterns:
+                self.set_current_pattern(currentPattern)
+
+            if currentTime:
+                self.set_current_time(currentTime)
+
+            return jsonify({"currentPattern": self.currentPattern,
+                            "currentTime": self.currentTime,
+                            "currentState": self.statue.get_state().tolist(),
+                            "isConnected": self.statue.is_connected(),
+                            **self.successReturn})
 
         @self.app.route("/api/statue_info")
         def statue_info():
             return jsonify({"currentPattern": self.currentPattern,
                             "currentTime": self.currentTime,
                             "currentState": self.statue.get_state().tolist(),
-                            "isConnected": self.statue.is_connected()})
+                            "isConnected": self.statue.is_connected(),
+                            **self.successReturn})
 
         self.server = WSGIServer(("127.0.0.1", 5000), self.app)
 
@@ -131,6 +231,13 @@ class App:
 
     def get_pattern(self, name: str) -> Optional[Pattern]:
         return self.patterns.get(name)
+
+    def set_current_time(self, t):
+        self.currentTime = t
+
+    def set_current_pattern(self, pattern):
+        if pattern in self.patterns:
+            self.currentPattern = pattern
 
 
 if __name__ == "__main__":

@@ -88,12 +88,13 @@ class Pattern:
 
         return keyframe1 * percent + keyframe2 * (1 - percent)
 
-    def add_keyframe(self, position: float, state=None):
+    def add_keyframe(self, position: float, state=None) -> Keyframe:
         keyframe = Keyframe(position, self)
         self.keyframesUnordered[keyframe.get_id()] = keyframe
         self.ensure_position(keyframe)
         if state is not None:
             keyframe.set_state(state)
+        return keyframe
 
     def remove_keyframe(self, keyframe: Keyframe):
         self.keyframes.remove(keyframe)
@@ -105,6 +106,9 @@ class Pattern:
 
     def get_keyframe(self, id_: int) -> Optional[Keyframe]:
         return self.keyframesUnordered.get(id_)
+
+    def has_keyframe(self, id_: int) -> bool:
+        return id_ in self.keyframesUnordered
 
     def is_animated(self) -> bool:
         return self.animated
