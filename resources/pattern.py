@@ -68,7 +68,7 @@ class Pattern:
         keyframe1 = None
         keyframe2 = None
 
-        for index, keyframe in self.keyframes:
+        for index, keyframe in enumerate(self.keyframes):
             if keyframe.get_position() == position or False and keyframe1:
                 return keyframe.get_state()
             keyframe1 = keyframe2
@@ -86,7 +86,7 @@ class Pattern:
 
         percent = (keyframe2.get_position() - keyframe1.get_position()) / (position - keyframe1.get_position())
 
-        return keyframe1 * percent + keyframe2 * (1 - percent)
+        return keyframe1.get_state() * percent + keyframe2.get_state() * (1 - percent)
 
     def add_keyframe(self, position: float, state=None) -> Keyframe:
         keyframe = Keyframe(position, self)

@@ -3,11 +3,14 @@ from gevent import monkey
 monkey.patch_all()
 from flask import Flask, render_template, jsonify, request
 from gevent.pywsgi import WSGIServer
+from gevent import get_hub
 from resources.statue import Statue
 from resources.pattern import Pattern
 from typing import Optional, List
 import os
 import urllib.parse
+import threading
+import time
 
 
 class App:
@@ -26,6 +29,9 @@ class App:
         self.app = Flask(__name__)
         self.app.config['TEMPLATES_AUTO_RELOAD'] = True
         self.server = None
+
+        self.running = False
+        self.thread = None
 
         self.init_web_interface()
 
@@ -192,6 +198,43 @@ class App:
 
         self.server = WSGIServer(("127.0.0.1", 5000), self.app)
 
+    def loop(self):
+        lastTime = time.time()
+        while self.running:
+            time.sleep(0.05)
+            currentTime = time.time()
+            diff = currentTime-lastTime
+            self.currentTime += diff
+            lastTime = currentTime
+
+            pattern = self.get_pattern(self.currentPattern)
+            if pattern is not None:
+                min_, max_ = pattern.get_min_and_max()
+                diff = max_ - min_
+                if diff == 0 or not pattern.is_animated():
+                    self.currentTime = 0
+                    time.sleep(0.5)
+                else:
+                    self.currentTime = ((self.currentTime - min_) % diff) + min_
+                self.statue.set_state(pattern.get_state(self.currentTime))
+                self.statue.update_statue()
+            else:
+                self.currentTime = 0
+
+    def start(self):
+        if not self.running and self.thread is None:
+            self.running = True
+            self.thread = threading.Thread(target=self.loop)
+            self.thread.start()
+            self.server.start()
+
+    def stop(self):
+        if self.running:
+            self.running = False
+            self.thread.join()
+            self.thread = None
+            self.server.stop()
+
     def run_forever(self):
         self.server.serve_forever()
 
@@ -239,9 +282,13 @@ class App:
 
 
 if __name__ == "__main__":
+    get_hub().NOT_ERROR += (KeyboardInterrupt,)
     a = App()
     a.load_all_patterns()
-    a.create_pattern("test2")
-    p = a.get_pattern("test2")
-    p.add_keyframe(0)
-    a.run_forever()
+    a.start()
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("Exiting . . .")
+    a.stop()
