@@ -1,5 +1,3 @@
-import json
-
 import numpy
 from gevent import monkey
 monkey.patch_all()
@@ -109,12 +107,18 @@ class App:
                 return jsonify(self.successReturn)
             return jsonify(self.errorReturn)
 
-        @self.app.route("/api/edit_keyframe")
+        @self.app.route("/api/edit_keyframe", methods=["GET", "POST"])
         def edit_keyframe():
             name = request.args.get("name")
             id_ = request.args.get("id")
             position = request.args.get("position")
-            state = request.args.get("state")
+            state = None
+            if request.method == "POST":
+                state = request.form.get("state")
+                if state:
+                    if isinstance(state, list):
+                        state = numpy.array(state)
+
             try:
                 id_ = int(id_)
             except ValueError:
@@ -127,12 +131,6 @@ class App:
                 pass
             except TypeError:
                 pass
-            try:
-                state = urllib.parse.unquote(state)
-                state = json.loads(state)
-                state = numpy.array(state, dtype=">i1")
-            except Exception:
-                state = None
             pattern = self.get_pattern(name)
             if pattern and pattern.has_keyframe(id_):
                 keyframe = pattern.get_keyframe(id_)
