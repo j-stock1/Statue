@@ -1,7 +1,7 @@
 import numpy
 from typing import Tuple
 
-from resources.color import Color
+from classes.color import Color
 
 
 def allow_rgb(funct):

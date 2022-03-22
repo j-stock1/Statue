@@ -1,6 +1,6 @@
 import serial
 import numpy
-from resources.state import State
+from classes.state import State
 
 
 class Statue(State):

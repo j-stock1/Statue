@@ -4,8 +4,8 @@ monkey.patch_all()
 from flask import Flask, render_template, jsonify, request
 from gevent.pywsgi import WSGIServer
 from gevent import get_hub
-from resources.statue import Statue
-from resources.pattern import Pattern
+from classes.statue import Statue
+from classes.pattern import Pattern
 from typing import Optional, List
 import os
 import urllib.parse

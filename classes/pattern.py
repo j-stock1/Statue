@@ -1,7 +1,7 @@
 from __future__ import annotations
 import numpy
 import json
-from resources.state import State
+from classes.state import State
 from typing import Tuple, List, Optional
 
 
@@ -61,7 +61,7 @@ class Pattern:
 
     def get_state(self, position: float) -> numpy.ndarray:
         if len(self.keyframes) < 1:
-            return numpy.zeros(self.shape)
+            return numpy.zeros(self.shape, dtype=">i1")
         if not self.animated:
             return self.keyframes[0].get_state()
 
