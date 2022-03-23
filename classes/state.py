@@ -1,5 +1,7 @@
 import numpy
-from resources.color import Color
+from typing import Tuple
+
+from classes.color import Color
 
 
 def allow_rgb(funct):
@@ -16,36 +18,36 @@ def allow_rgb(funct):
 
 
 class State:
-    def __init__(self, shape):
+    def __init__(self, shape: Tuple[int, ...]):
         self.shape = shape
-        self.state = numpy.zeros(shape)
+        self.state = numpy.zeros(shape, dtype=">i1")
 
-    def get_shape(self):
+    def get_shape(self) -> Tuple[int]:
         return self.state.shape
 
-    def set_state(self, state):
+    def set_state(self, state: numpy.ndarray):
         if state.shape == self.state.shape:
             self.state = state.copy()
 
-    def get_state(self):
+    def get_state(self) -> numpy.ndarray:
         return self.state
 
     @allow_rgb
-    def set_column(self, column, color):
+    def set_column(self, column: int, color: Color):
         for ring in range(self.shape[0]):
             self.state[ring][column] = color.get_tuple()
 
     @allow_rgb
-    def set_crystal(self, ring, crystal, color):
+    def set_crystal(self, ring: int, crystal: int, color: Color):
         self.state[ring][crystal] = color.get_tuple()
 
     @allow_rgb
-    def set_ring(self, ring, color):
+    def set_ring(self, ring: int, color: Color):
         for crystal in range(self.shape[1]):
             self.state[ring][crystal] = color.get_tuple()
 
     @allow_rgb
-    def set_statue(self, color):
+    def set_statue(self, color: Color):
         for ring in range(self.shape[0]):
             for crystal in range(self.shape[1]):
                 self.state[ring][crystal] = color.get_tuple()

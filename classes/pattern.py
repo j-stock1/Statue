@@ -1,32 +1,34 @@
+from __future__ import annotations
 import numpy
 import json
-from resources.state import State
+from classes.state import State
+from typing import Tuple, List, Optional
 
 
 class Keyframe(State):
-    def __init__(self, position, pattern):
+    def __init__(self, position: float, pattern: Pattern):
         super().__init__(pattern.get_shape())
         self.position = position
         self.pattern = pattern
         self.id = pattern.get_new_id()
 
-    def get_id(self):
+    def get_id(self) -> int:
         return self.id
 
-    def set_position(self, position):
+    def set_position(self, position: float):
         if self.pattern.is_position_open(position):
             self.position = position
             self.pattern.ensure_position(self)
 
-    def get_position(self):
-        return self.state
+    def get_position(self) -> float:
+        return self.position
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         data = {"position": self.position, "state": self.state.tolist()}
         return data
 
     @classmethod
-    def from_dict(cls, dictData, pattern):
+    def from_dict(cls, dictData: dict, pattern: Pattern):
         keyframe = cls(dictData['position'], pattern)
         array = numpy.array(dictData['state'])
         keyframe.set_state(array)
@@ -34,7 +36,7 @@ class Keyframe(State):
 
 
 class Pattern:
-    def __init__(self, shape, name):
+    def __init__(self, shape: Tuple[int], name: str) -> (int, int):
         self.animated = False
         self.keyframes = []
         self.keyframesUnordered = {}
@@ -57,16 +59,16 @@ class Pattern:
                 max_ = keyframe.get_position()
         return min_, max_
 
-    def get_state(self, position):
+    def get_state(self, position: float) -> numpy.ndarray:
         if len(self.keyframes) < 1:
-            return numpy.zeros(self.shape)
+            return numpy.zeros(self.shape, dtype=">i1")
         if not self.animated:
             return self.keyframes[0].get_state()
 
         keyframe1 = None
         keyframe2 = None
 
-        for index, keyframe in self.keyframes:
+        for index, keyframe in enumerate(self.keyframes):
             if keyframe.get_position() == position or False and keyframe1:
                 return keyframe.get_state()
             keyframe1 = keyframe2
@@ -84,36 +86,43 @@ class Pattern:
 
         percent = (keyframe2.get_position() - keyframe1.get_position()) / (position - keyframe1.get_position())
 
-        return keyframe1 * percent + keyframe2 * (1 - percent)
+        return keyframe1.get_state() * percent + keyframe2.get_state() * (1 - percent)
 
-    def add_keyframe(self, position, state=None):
+    def add_keyframe(self, position: float, state=None) -> Keyframe:
         keyframe = Keyframe(position, self)
         self.keyframesUnordered[keyframe.get_id()] = keyframe
         self.ensure_position(keyframe)
         if state is not None:
             keyframe.set_state(state)
+        return keyframe
 
-    def remove_keyframe(self, keyframe):
+    def remove_keyframe(self, keyframe: Keyframe):
         self.keyframes.remove(keyframe)
         del self.keyframesUnordered[keyframe.get_id()]
         self.set_animated(self.animated)
 
-    def get_keyframes(self):
+    def get_keyframes(self) -> List[Keyframe]:
         return self.keyframes
 
-    def is_animated(self):
+    def get_keyframe(self, id_: int) -> Optional[Keyframe]:
+        return self.keyframesUnordered.get(id_)
+
+    def has_keyframe(self, id_: int) -> bool:
+        return id_ in self.keyframesUnordered
+
+    def is_animated(self) -> bool:
         return self.animated
 
-    def set_animated(self, animated):
+    def set_animated(self, animated: bool):
         self.animated = animated and len(self.keyframes) > 1
 
-    def is_position_open(self, position):
+    def is_position_open(self, position: float) -> bool:
         for keyframe in self.keyframes:
             if keyframe.get_position() == position:
                 return False
         return True
 
-    def ensure_position(self, keyframe):
+    def ensure_position(self, keyframe: Keyframe):
         if keyframe in self.keyframes:
             self.keyframes.remove(keyframe)
 
@@ -124,21 +133,21 @@ class Pattern:
 
         self.keyframes.append(keyframe)
 
-    def get_new_id(self):
+    def get_new_id(self) -> int:
         for i in range(len(self.keyframesUnordered) + 1):
             if i not in self.keyframesUnordered:
                 return i
 
-    def get_name(self):
+    def get_name(self) -> str:
         return self.name
 
-    def set_name(self, name):
+    def set_name(self, name: str):
         self.name = name
 
-    def get_shape(self):
+    def get_shape(self) -> Tuple[int]:
         return self.shape
 
-    def to_json(self):
+    def to_json(self) -> str:
         data = {"animated": self.animated, "shape": self.shape, "keyframes": [], "name": self.name}
 
         for keyframe in self.keyframes:
@@ -147,7 +156,7 @@ class Pattern:
         return json.dumps(data)
 
     @classmethod
-    def from_json(cls, jsonData):
+    def from_json(cls, jsonData: str) -> Pattern:
         data = json.loads(jsonData)
 
         pattern = cls(data["shape"], data["name"])
@@ -158,13 +167,13 @@ class Pattern:
         pattern.set_animated(data["animated"])
         return pattern
 
-    def save_to_file(self, file):
+    def save_to_file(self, file: str):
         f = open(file, "w")
         f.write(self.to_json())
         f.close()
 
     @classmethod
-    def read_from_file(cls, file):
+    def read_from_file(cls, file: str) -> Pattern:
         f = open(file, "r")
         data = f.read()
         f.close()

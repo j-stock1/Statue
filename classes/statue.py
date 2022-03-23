@@ -1,6 +1,6 @@
 import serial
 import numpy
-from resources.state import State
+from classes.state import State
 
 
 class Statue(State):
@@ -10,7 +10,7 @@ class Statue(State):
     rings = 17
     crystals = 22
 
-    def __init__(self, dummyConnection=False, port="COM6", baudrate=115200):
+    def __init__(self, dummyConnection: bool = False, port: str = "COM6", baudrate: int = 115200):
         super().__init__((self.rings, self.crystals, 3))
         self.port = port
         self.baudrate = baudrate
@@ -47,7 +47,7 @@ class Statue(State):
                 muxY = index // self.muxSize
                 self.exportedState[muxY][muxX] = self.state[ring][crystal]
 
-    def load_conversion_map(self, filePath):
+    def load_conversion_map(self, filePath: str):
         offset = 1, 3
         size = 44, 17
 
@@ -109,7 +109,7 @@ class Statue(State):
                 if len(recv) == 1:
                     break
 
-    def upload_code(self, cppFile):
+    def upload_code(self, cppFile: str):
         self.close_connection()
         # UPLOAD CODE
         self.create_connection()
