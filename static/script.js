@@ -23,6 +23,8 @@ material.transparent = true;
 var r = 7;
 var rows = 22;
 var columns = 17;
+var count = 0;
+var objects = [];
 for (var col = 0; col <= columns; ++col) {
 	for (var i = 0; i < 360; i += (360 / (rows - 1))) {
 		//material = new THREE.MeshPhongMaterial({color: Math.random() *  0xffffff});
@@ -33,12 +35,49 @@ for (var col = 0; col <= columns; ++col) {
 		object.position.x = y;
 		object.position.y = (columns / 2 * -4) + (col * 4);
 		object.position.z = x;
+		object.callback = objectClickHandler;
 		scene.add(object);
+		objects[count] = object;
+		count++;
 	}
+}
+function objectClickHandler(test) {
+	alert("Clicked");
+	console.log(test);
+	//console.log(count);
 }
 scene.background = new THREE.Color('#72c0ff');
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
+var raycaster = new THREE.Raycaster();
+var mouse = new THREE.Vector2();
+function onDocumentMouseDown(event) {
+	event.preventDefault();
+	mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
+	mouse.y =  - (event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+	raycaster.setFromCamera(mouse, camera);
+	var intersects = raycaster.intersectObjects(objects);
+	if (intersects.length > 0)
+		intersects[0].object.callback("Herefjlsf");
+}
+function onDocumentMouseMove(event) {
+	event.preventDefault();
+ 
+    mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
+    mouse.y =  - (event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+ 
+    raycaster.setFromCamera(mouse, camera);
+ 
+    var intersects = raycaster.intersectObjects(objects);
+    var canvas = document.body.getElementsByTagName('canvas')[0];
+ 
+    if (intersects.length > 0)
+        canvas.style.cursor = "pointer";
+	else
+        canvas.style.cursor = "default";
+}
+document.addEventListener('mousemove', onDocumentMouseMove, false);
+document.addEventListener('mousedown', onDocumentMouseDown, false);
 function animate() {
 	requestAnimationFrame(animate);
 	renderer.render(scene, camera);
