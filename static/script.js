@@ -2,73 +2,102 @@ import * as THREE from '../static/three.module.js';
 //import {GLTFLoader} from '../static/GLTFLoader.js';
 import {OrbitControls} from '../static/OrbitControls.js';
 
+const parent = document.getElementById("panel2")
+
 const scene = new THREE.Scene();
-var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;
-var ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT;
-const camera = new THREE.PerspectiveCamera(45, ASPECT, 1, 1000);
-camera.position.set(100, 0, 0);
+const camera = new THREE.PerspectiveCamera(45, parent.offsetWidth/parent.offsetHeight, 1, 1000);
 const renderer = new THREE.WebGLRenderer();
-//const loader = new GLTFLoader();
+
+
+camera.position.set(100, 0, 0);
+
 const controls = new OrbitControls(camera, renderer.domElement)
+
 const light = new THREE.SpotLight()
 const ambilight = new THREE.AmbientLight(0x444444);
 light.position.set(200, 200, 1000)
 scene.add(ambilight)
 scene.add(light)
-//const flamingo = await loader.loadAsync('https://cdn.devdojo.com/assets/3d/parrot.glb');
+
 var object, material;
+
 var objGeometry = new THREE.CylinderGeometry(1, 1, 3, 22, 1);
-material = new THREE.MeshPhongMaterial({color: 0xFFA500});
-material.transparent = true;
+
+
 var r = 7;
-var rows = 22;
-var columns = 17;
-var count = 0;
+var rings = 17;
+var crystals = 22;
+
 var objects = [];
-for (var col = 0; col <= columns; ++col) {
-	for (var i = 0; i < 360; i += (360 / (rows - 1))) {
-		//material = new THREE.MeshPhongMaterial({color: Math.random() *  0xffffff});
-		//material.transparent = true;
+let full_list = [];
+for (var ring = 0; ring < rings; ring++) {
+	let temp_ring = []
+	let crystal = 0;
+	for (var i = 0; i < 360; i += (360 / (crystals))) {
+		material = new THREE.MeshPhongMaterial({color: 0xFFA500});
+		material.transparent = true;
 		var x = Math.sin(i*(Math.PI/180))*r;
 		var y = Math.cos(i*(Math.PI/180))*r;
 		object = new THREE.Mesh(objGeometry.clone(), material);
 		object.position.x = y;
-		object.position.y = (columns / 2 * -4) + (col * 4);
+		object.position.y = (rings / 2 * -4) + (ring * 4);
 		object.position.z = x;
 		object.callback = objectClickHandler;
+		object.ring = ring;
+		object.crystal = crystal;
+		crystal++;
 		scene.add(object);
-		objects[count] = object;
-		count++;
+		temp_ring.push(object);
+		full_list.push(object)
+	}
+	objects.push(temp_ring);
+}
+
+function setState(state){
+	for(let ring = 0; ring < rings; ring++){
+		for(let crystal = 0; crystal < crystals; crystal++){
+			let obj = objects[ring][crystal];
+			let color = state[ring][crystal];
+			obj.material.color.setHex(rgbToHex(color[0], color[1], color[2], "0x"));
+			//obj.material.color.setHex("0xff0000");
+			obj.material.needsUpdate = true
+		}
 	}
 }
+
 function objectClickHandler(test) {
-	alert("Clicked");
-	console.log(test);
+	let obj = test.object
+	//alert("Clicked");
 	//console.log(count);
+	setForm(obj.ring, obj.crystal);
 }
 scene.background = new THREE.Color('#72c0ff');
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+
+renderer.setSize(parent.offsetWidth, parent.offsetHeight);
+parent.appendChild(renderer.domElement);
 var raycaster = new THREE.Raycaster();
 var mouse = new THREE.Vector2();
 function onDocumentMouseDown(event) {
-	event.preventDefault();
-	mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
-	mouse.y =  - (event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+	//event.preventDefault();
+
+	const rect = event.target.getBoundingClientRect();
+	mouse.x = ((event.clientX - rect.left) / renderer.domElement.clientWidth) * 2 - 1;
+	mouse.y =  - ((event.clientY -rect.top) / renderer.domElement.clientHeight) * 2 + 1;
 	raycaster.setFromCamera(mouse, camera);
-	var intersects = raycaster.intersectObjects(objects);
+	var intersects = raycaster.intersectObjects(full_list);
 	if (intersects.length > 0)
-		intersects[0].object.callback("Herefjlsf");
+		intersects[0].object.callback(intersects[0]);
 }
 function onDocumentMouseMove(event) {
-	event.preventDefault();
+	//event.preventDefault();
  
-    mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
-    mouse.y =  - (event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+	const rect = event.target.getBoundingClientRect();
+	mouse.x = ((event.clientX - rect.left) / renderer.domElement.clientWidth) * 2 - 1;
+	mouse.y =  - ((event.clientY -rect.top) / renderer.domElement.clientHeight) * 2 + 1;
  
     raycaster.setFromCamera(mouse, camera);
  
-    var intersects = raycaster.intersectObjects(objects);
+    var intersects = raycaster.intersectObjects(full_list);
     var canvas = document.body.getElementsByTagName('canvas')[0];
  
     if (intersects.length > 0)
@@ -76,10 +105,23 @@ function onDocumentMouseMove(event) {
 	else
         canvas.style.cursor = "default";
 }
+function resize(){
+	renderer.setSize(0,0);
+	renderer.setSize(parent.offsetWidth, parent.offsetHeight);
+	camera.aspect = parent.offsetWidth/parent.offsetHeight;
+	camera.updateProjectionMatrix();
+}
+
+window.onresize = resize
+
 document.addEventListener('mousemove', onDocumentMouseMove, false);
-document.addEventListener('mousedown', onDocumentMouseDown, false);
+renderer.domElement.addEventListener('mousedown', onDocumentMouseDown, false);
+
+setUpdateStatueCallback(setState);
+
 function animate() {
-	requestAnimationFrame(animate);
 	renderer.render(scene, camera);
+	requestAnimationFrame(animate);
 }
 animate();
+

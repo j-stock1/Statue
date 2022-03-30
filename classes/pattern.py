@@ -162,7 +162,9 @@ class Pattern:
         pattern = cls(data["shape"], data["name"])
 
         for keyframe in data["keyframes"]:
-            pattern.keyframes.append(Keyframe.from_dict(keyframe, pattern))
+            k = Keyframe.from_dict(keyframe, pattern)
+            pattern.keyframes.append(k)
+            pattern.keyframesUnordered[k.get_id()] = k
 
         pattern.set_animated(data["animated"])
         return pattern

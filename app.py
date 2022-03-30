@@ -11,13 +11,14 @@ import os
 import urllib.parse
 import threading
 import time
+import json
 
 
 class App:
     errorReturn = {"result": "error"}
     successReturn = {"result": "success"}
 
-    def __init__(self):
+    def __init__(self, ip: str = "127.0.0.1", port: int = 5000):
         self.patternDir = "patterns"
         self.patterns = {}
         self.currentPattern = None
@@ -33,11 +34,17 @@ class App:
         self.running = False
         self.thread = None
 
+        self.ip = ip
+        self.port = port
         self.init_web_interface()
 
     def init_web_interface(self):
         @self.app.route("/")
         def index():
+            return render_template("app.html")
+
+        @self.app.route("/demo")
+        def demo():
             return render_template("index.html")
 
         @self.app.route("/api/list_patterns")
@@ -120,7 +127,11 @@ class App:
             position = request.args.get("position")
             state = None
             if request.method == "POST":
-                state = request.form.get("state")
+                try:
+                    data = json.loads(request.data)
+                except json.JSONDecodeError:
+                    data = {}
+                state = data.get("state")
                 if state:
                     if isinstance(state, list):
                         state = numpy.array(state)
@@ -142,7 +153,7 @@ class App:
                 keyframe = pattern.get_keyframe(id_)
                 if position:
                     keyframe.set_position(position)
-                if state:
+                if state is not None:
                     keyframe.set_state(state)
                 return jsonify({"id": keyframe.get_id(),
                                 "position": keyframe.get_position(),
@@ -196,7 +207,7 @@ class App:
                             "isConnected": self.statue.is_connected(),
                             **self.successReturn})
 
-        self.server = WSGIServer(("127.0.0.1", 5000), self.app)
+        self.server = WSGIServer((self.ip, self.port), self.app)
 
     def loop(self):
         lastTime = time.time()
@@ -264,6 +275,7 @@ class App:
             del self.patterns[name]
 
             os.remove(os.path.join(self.patternDir, name))
+            self.save_all_patterns()
             return True
         return False
 
@@ -285,6 +297,7 @@ if __name__ == "__main__":
     get_hub().NOT_ERROR += (KeyboardInterrupt,)
     a = App()
     a.load_all_patterns()
+    a.set_current_pattern("test")
     a.start()
     try:
         while True:
@@ -292,3 +305,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("Exiting . . .")
     a.stop()
+    a.save_all_patterns()
