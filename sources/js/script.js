@@ -1,13 +1,30 @@
-import * as THREE from '../static/three.module.js';
+import * as THREE from 'three';
 //import {GLTFLoader} from '../static/GLTFLoader.js';
-import {OrbitControls} from '../static/OrbitControls.js';
-
+import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
 const parent = document.getElementById("panel2")
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(45, parent.offsetWidth/parent.offsetHeight, 1, 1000);
 const renderer = new THREE.WebGLRenderer();
+const composer = new EffectComposer( renderer );
 
+
+
+const renderPass = new RenderPass(scene, camera)
+const outlinePass = new OutlinePass(new THREE.Vector2(parent.offsetWidth, parent.offsetHeight), scene, camera);
+outlinePass.edgeStrength = Number( 10 );
+outlinePass.edgeGlow = Number( 0);
+outlinePass.edgeThickness = Number( 1 );
+outlinePass.pulsePeriod = Number( 0 );
+outlinePass.visibleEdgeColor.set( "#e9ff00" );
+outlinePass.hiddenEdgeColor.set( "#000000" );
+
+composer.addPass(renderPass);
+composer.addPass(outlinePass);
+composer.setSize(parent.offsetWidth, parent.offsetHeight);
 
 camera.position.set(100, 0, 0);
 
@@ -58,7 +75,7 @@ function setState(state){
 		for(let crystal = 0; crystal < crystals; crystal++){
 			let obj = objects[ring][crystal];
 			let color = state[ring][crystal];
-			obj.material.color.setHex(rgbToHex(color[0], color[1], color[2], "0x"));
+			obj.material.color.setHex(window.rgbToHex(color[0], color[1], color[2], "0x"));
 			//obj.material.color.setHex("0xff0000");
 			obj.material.needsUpdate = true
 		}
@@ -100,27 +117,33 @@ function onDocumentMouseMove(event) {
     var intersects = raycaster.intersectObjects(full_list);
     var canvas = document.body.getElementsByTagName('canvas')[0];
  
-    if (intersects.length > 0)
+    if (intersects.length > 0){
         canvas.style.cursor = "pointer";
-	else
-        canvas.style.cursor = "default";
+		outlinePass.selectedObjects = [intersects[0].object]
+	}else {
+		canvas.style.cursor = "default";
+		outlinePass.selectedObjects = [];
+	}
 }
 function resize(){
 	renderer.setSize(0,0);
 	renderer.setSize(parent.offsetWidth, parent.offsetHeight);
 	camera.aspect = parent.offsetWidth/parent.offsetHeight;
+	composer.setSize(parent.offsetWidth, parent.offsetHeight);
 	camera.updateProjectionMatrix();
 }
+//resize()
 
 window.onresize = resize
 
 document.addEventListener('mousemove', onDocumentMouseMove, false);
 renderer.domElement.addEventListener('mousedown', onDocumentMouseDown, false);
 
-setUpdateStatueCallback(setState);
+window.setUpdateStatueCallback(setState);
 
 function animate() {
-	renderer.render(scene, camera);
+	//renderer.render(scene, camera);
+	composer.render();
 	requestAnimationFrame(animate);
 }
 animate();

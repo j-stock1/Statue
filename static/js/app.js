@@ -11,6 +11,7 @@ function setUpdateStatueCallback(funct){
     updateStatueCallback = funct
     updateStatueCallback(statueState);
 }
+window.setUpdateStatueCallback = setUpdateStatueCallback
 
 
 let statueState = []
@@ -29,15 +30,18 @@ function getColor(hex) {
   const b = parseInt(color.substr(5,2), 16)
   return [r, g, b]
 }
+window.getColorfunction = getColor
 
 function componentToHex(c) {
   let hex = c.toString(16);
   return hex.length === 1 ? "0" + hex : hex;
 }
+window.componentToHex = componentToHex
 
 function rgbToHex(r, g, b, start="#") {
   return start + componentToHex(r) + componentToHex(g) + componentToHex(b);
 }
+window.rgbToHex = rgbToHex
 
 function setForm(ring, crystal){
     const color = statueState[ring][crystal];
@@ -50,7 +54,6 @@ function setForm(ring, crystal){
 setForm(0,0)
 
 function resetFunct(){
-    console.log("STUFF")
     const ring = parseInt(document.getElementById("ring").value)
     const crystal = parseInt(document.getElementById("crystal").value)
     setForm(ring, crystal)
@@ -79,15 +82,16 @@ function updateStatueState(form){
     updateStatueCallback(statueState);
 }
 
-function loadStatueState(){
+function loadStatueState(onload){
     const xhttp = new XMLHttpRequest();
 
     xhttp.open("GET", "/api/keyframe_info?name="+pattern+"&id="+keyframe.toString(), true);
     xhttp.onload = function() {
         statueState = JSON.parse(xhttp.response)["state"];
         updateStatueCallback(statueState);
+        onload()
     }
     xhttp.send();
 }
 
-loadStatueState();
+loadStatueState(()=>{setForm(0, 0);});
