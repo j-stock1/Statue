@@ -11,7 +11,7 @@ body {
 	flex: 1;
 }
 #panel1 {
-	background-color: rgba(0, 0, 0, 0.01);
+	background-color: rgba(0, 0, 0, 0.3);
 }
 table {
 	margin-left: auto;
